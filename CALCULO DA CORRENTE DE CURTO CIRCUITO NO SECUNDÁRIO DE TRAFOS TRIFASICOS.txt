@@ -1,0 +1,71 @@
+EXPORT Icc_Trafo()
+BEGIN
+  LOCAL S, Vlinha, Vpri, Z, In_sec, In_pri, Icc;
+
+  // ===== Instruções em 8 telas =====
+  MSGBOX("=== CÁLCULO ICC TRAFO ==="+CHAR(10)+CHAR(10)+
+         "Este programa calcula a corrente de curto-circuito em transformadores.");
+
+  MSGBOX("Identificação da tensão de linha:"+CHAR(10)+
+         "- Se a placa mostra 2 valores (ex: 380/220, 220/127):"+CHAR(10)+
+         "   → O MAIOR é a tensão de linha (LL).");
+
+  MSGBOX("Continuação:"+CHAR(10)+
+         "- O MENOR valor é a tensão de fase (LN)."+CHAR(10)+
+         "Exemplo: 380/220 → 380 V (linha), 220 V (fase).");
+
+  MSGBOX("Se a placa mostra apenas 1 valor (ex: 13.800 ou 380):"+CHAR(10)+
+         "   → Esse valor já é a tensão de linha (LL).");
+
+  MSGBOX("Tabela de referência (parte 1):"+CHAR(10)+
+         "  220/127 V → Linha = 220 V"+CHAR(10)+
+         "  380/220 V → Linha = 380 V");
+
+  MSGBOX("Tabela de referência (parte 2):"+CHAR(10)+
+         "  440/254 V → Linha = 440 V"+CHAR(10)+
+         "  13.800/380 V → Linha = 380 V (BT)"+CHAR(10)+
+         "                 Primário = 13.800 V");
+
+  MSGBOX("Impedância (%Z):"+CHAR(10)+
+         "- Use sempre a do fabricante."+CHAR(10)+
+         "- Se não houver dado, utilize 5,5 % como valor típico.");
+
+  MSGBOX("Fórmulas utilizadas:"+CHAR(10)+
+         "  In = S / (√3 * Vlinha)"+CHAR(10)+
+         "  Icc = In / (Z/100)");
+
+  // ===== Entrada de dados =====
+  INPUT({S, Vpri, Vlinha, Z}, 
+        "Cálculo ICC Trafo",
+        {"Potência (kVA):", 
+         "Tensão de Linha Primário (V):", 
+         "Tensão de Linha Secundário (V):", 
+         "Impedância (%) :"},
+        {"Digite a potência nominal em kVA (ex: 1000)", 
+         "Digite a tensão de linha do PRIMÁRIO (ex: 13800)", 
+         "Digite a tensão de linha do SECUNDÁRIO (ex: 380 ou 220)", 
+         "Digite a impedância percentual (ex: 5.5)"});
+
+  // Converte kVA para VA
+  S := S * 1000;
+
+  // Corrente nominal no secundário
+  In_sec := S / (√3 * Vlinha);
+
+  // Corrente nominal no primário
+  In_pri := S / (√3 * Vpri);
+
+  // Corrente de curto no secundário
+  Icc := In_sec / (Z/100);
+
+  // ===== Resultados =====
+  PRINT();
+  PRINT("=== RESULTADOS ICC TRAFO ===");
+  PRINT("Potência = " + STRING(S/1000) + " kVA");
+  PRINT("Tensão de linha primário = " + STRING(Vpri) + " V");
+  PRINT("Tensão de linha secundário = " + STRING(Vlinha) + " V");
+  PRINT("Impedância = " + STRING(Z) + " %");
+  PRINT("Corrente nominal primário = " + STRING(ROUND(In_pri,2)) + " A");
+  PRINT("Corrente nominal secundário = " + STRING(ROUND(In_sec,2)) + " A");
+  PRINT("Corrente de curto secundário = " + STRING(ROUND(Icc/1000,2)) + " kA");
+END;
