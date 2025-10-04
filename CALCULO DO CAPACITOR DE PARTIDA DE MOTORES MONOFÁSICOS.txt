@@ -1,0 +1,24 @@
+EXPORT CapacitorPartida()
+BEGIN
+  LOCAL P, V, K, C, tipo;
+  
+  // Entrada de dados no mesmo estilo do ResistorLED
+  INPUT(tipo, "", "1=CV, 2=W");
+  INPUT(P, "", "Potencia Motor:");
+  INPUT(V, "", "Tensao Rede (V):");
+  INPUT(K, "", "Fator K (padrao=3600):", 3600);
+  
+  // Conversão de unidades se necessário
+  IF tipo == 1 THEN
+    P := P * 746;  // Converte CV para W (1 CV = 746 W)
+  END;
+  
+  // Cálculo do capacitor de partida: C = (K * P) / V²
+  C := (K * P) / (V * V);
+  
+  // Exibição do resultado no mesmo estilo
+  MSGBOX("RESULTADO:" +
+         "\nCapacitor Partida: " + STRING(C) + " μF" +
+         "\nPara motor: " + STRING(P) + " W" +
+         "\nTensao: " + STRING(V) + " V");
+END;
