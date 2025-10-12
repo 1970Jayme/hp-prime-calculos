@@ -1,0 +1,100 @@
+EXPORT AmpacidadeCondutor()
+BEGIN
+  LOCAL secoes := {
+    "1.5 mm²", "2.5 mm²", "4 mm²", "6 mm²", "10 mm²",
+    "16 mm²", "25 mm²", "35 mm²", "50 mm²", "70 mm²",
+    "95 mm²", "120 mm²"
+  };
+
+  LOCAL materiais := {"Cobre", "Alumínio"};
+  LOCAL instalacoes := {"Eletroduto no ar", "Bandeja", "Subterrâneo em duto"};
+  LOCAL isolacoes := {"PVC (70°C)", "XLPE (90°C)"};
+
+  LOCAL ampacidades_Cobre_PVC := {17, 24, 32, 41, 56, 75, 99, 123, 150, 180, 218, 245};
+  LOCAL ampacidades_Cobre_XLPE := {19, 26, 34, 44, 61, 82, 108, 134, 161, 202, 240, 270};
+  LOCAL ampacidades_Alum_PVC := {15, 21, 28, 36, 50, 68, 90, 112, 135, 162, 195, 220};
+  LOCAL ampacidades_Alum_XLPE := {17, 23, 30, 39, 54, 73, 96, 119, 142, 179, 212, 240};
+
+  LOCAL tipo_material, tipo_instalacao, tipo_isolacao;
+  LOCAL indice_secao, temp, num_cond;
+  LOCAL base_amp, fator_temp := 1, fator_agrup := 1, ampacidade_final;
+
+  CHOOSE(tipo_material, "Material do Condutor", materiais);
+  IF tipo_material == 0 THEN RETURN; END;
+
+  CHOOSE(tipo_instalacao, "Tipo de Instalação", instalacoes);
+  IF tipo_instalacao == 0 THEN RETURN; END;
+
+  CHOOSE(tipo_isolacao, "Tipo de Isolação", isolacoes);
+  IF tipo_isolacao == 0 THEN RETURN; END;
+
+  CHOOSE(indice_secao, "Seção do Condutor", secoes);
+  IF indice_secao == 0 THEN RETURN; END;
+
+  INPUT(temp, "Temperatura Ambiente (°C)", "", "Ex: 30", 30);
+  INPUT(num_cond, "Número de Condutores Carregados", "", "Ex: 3", 3);
+
+  // Seleciona ampacidade base conforme material e isolação (simplificado)
+  IF tipo_material == 1 THEN
+    IF tipo_isolacao == 1 THEN
+      base_amp := ampacidades_Cobre_PVC(indice_secao);
+    ELSE
+      base_amp := ampacidades_Cobre_XLPE(indice_secao);
+    END;
+  ELSE
+    IF tipo_isolacao == 1 THEN
+      base_amp := ampacidades_Alum_PVC(indice_secao);
+    ELSE
+      base_amp := ampacidades_Alum_XLPE(indice_secao);
+    END;
+  END;
+
+  // Fator de temperatura baseado na isolação e temperatura
+  IF tipo_isolacao == 1 THEN  // PVC (70°C)
+    IF temp <= 25 THEN fator_temp := 1.03; END;
+    IF temp > 25 AND temp <= 30 THEN fator_temp := 1.00; END;
+    IF temp > 30 AND temp <= 35 THEN fator_temp := 0.94; END;
+    IF temp > 35 AND temp <= 40 THEN fator_temp := 0.87; END;
+    IF temp > 40 AND temp <= 45 THEN fator_temp := 0.79; END;
+    IF temp > 45 AND temp <= 50 THEN fator_temp := 0.71; END;
+    IF temp > 50 AND temp <= 55 THEN fator_temp := 0.61; END;
+    IF temp > 55 AND temp <= 60 THEN fator_temp := 0.50; END;
+  ELSE                        // XLPE (90°C)
+    IF temp <= 25 THEN fator_temp := 1.08; END;
+    IF temp > 25 AND temp <= 30 THEN fator_temp := 1.00; END;
+    IF temp > 30 AND temp <= 35 THEN fator_temp := 0.96; END;
+    IF temp > 35 AND temp <= 40 THEN fator_temp := 0.91; END;
+    IF temp > 40 AND temp <= 45 THEN fator_temp := 0.87; END;
+    IF temp > 45 AND temp <= 50 THEN fator_temp := 0.82; END;
+    IF temp > 50 AND temp <= 55 THEN fator_temp := 0.76; END;
+    IF temp > 55 AND temp <= 60 THEN fator_temp := 0.71; END;
+  END;
+
+  // Fator de agrupamento (número de condutores carregados)
+  IF num_cond <= 1 THEN fator_agrup := 1.00; END;
+  IF num_cond == 2 THEN fator_agrup := 0.80; END;
+  IF num_cond == 3 THEN fator_agrup := 0.70; END;
+  IF num_cond == 4 THEN fator_agrup := 0.65; END;
+  IF num_cond == 5 THEN fator_agrup := 0.60; END;
+  IF num_cond == 6 THEN fator_agrup := 0.57; END;
+  IF num_cond == 7 THEN fator_agrup := 0.54; END;
+  IF num_cond == 8 THEN fator_agrup := 0.52; END;
+  IF num_cond == 9 THEN fator_agrup := 0.50; END;
+  IF num_cond >= 10 AND num_cond <= 15 THEN fator_agrup := 0.45; END;
+  IF num_cond > 15 THEN fator_agrup := 0.41; END;
+
+  ampacidade_final := base_amp * fator_temp * fator_agrup;
+
+  PRINT();
+  PRINT("=== CÁLCULO DE AMPACIDADE ===");
+  PRINT("Material: " + materiais(tipo_material));
+  PRINT("Instalação: " + instalacoes(tipo_instalacao));
+  PRINT("Isolação: " + isolacoes(tipo_isolacao));
+  PRINT("Seção: " + secoes(indice_secao));
+  PRINT("Temperatura: " + STRING(temp) + " °C");
+  PRINT("Condutores carregados: " + STRING(num_cond));
+  PRINT("Ampacidade base: " + STRING(base_amp) + " A");
+  PRINT("Fator Temperatura: " + STRING(ROUND(fator_temp, 3)));
+  PRINT("Fator Agrupamento: " + STRING(ROUND(fator_agrup, 3)));
+  PRINT(">>> Ampacidade Final: " + STRING(ROUND(ampacidade_final, 3)) + " A");
+END;
